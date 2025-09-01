@@ -7,20 +7,22 @@ import connectDB from "./database/db.js"
 import errorHandler from "./middleware/error.middleware.js"
 import cookieParser from "cookie-parser"
 import arcjetMiddleware from "./middleware/arcjet.middleware.js"
+import workflowRouter from "./routes/workflow.route.js"
 
-const app = express()
+const app = express();
 
 // Middleware
 app.use(express.json())
 app.use(express.urlencoded({ extended: false })) // Parse URL-encoded bodies
 app.use(express.static("public")) // Serve static files
 app.use(cookieParser())
-app.use(arcjetMiddleware)
+// app.use(arcjetMiddleware)
 
 // Use routes
 app.use("/api/v1/auth", authRouter)
 app.use("/api/v1/user", userRouter)
 app.use("/api/v1/subscriptions", subscriptionRouter)
+app.use("/api/v1/workflow", workflowRouter)
 
 // Error handling middleware
 app.use(errorHandler)

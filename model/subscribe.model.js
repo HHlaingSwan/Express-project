@@ -30,7 +30,7 @@ const subscriptionSchema = new mongoose.Schema({
     },
     plan: {
         type: String,
-        enum: ["free", "premium"],
+        enum: ["free", "premium", "gift"],
         default: "free"
     },
     status: {
@@ -40,10 +40,10 @@ const subscriptionSchema = new mongoose.Schema({
     },
     startDate: {
         type: Date,
-        default: Date.now,
+        default: Date.now, // Uses user input if provided, otherwise defaults to now
         validate: {
             validator: function (value) {
-                return value >= Date.now();
+                return value <= Date.now();
             },
             message: "Start date must be now or in the future"
         }
@@ -61,9 +61,30 @@ const subscriptionSchema = new mongoose.Schema({
         type: String,
         trim: true,
         maxLength: 500
+    },
+    duration: {
+        type: String,
+        enum: ["1d", "3d", "7d", "30d", "365d"],
+        required: true
     }
 }, {
     timestamps: true
+});
+
+// Auto-calculate endDate before saving
+subscriptionSchema.pre("save", function (next) {
+    if (this.isModified("startDate") || this.isModified("duration") || !this.endDate) {
+        const durations = {
+            "1d": 1,
+            "3d": 3,
+            "7d": 7,
+            "30d": 30,
+            "365d": 365
+        };
+        const days = durations[this.duration] || 0;
+        this.endDate = new Date(this.startDate.getTime() + days * 24 * 60 * 60 * 1000);
+    }
+    next();
 });
 
 subscriptionSchema.index({ user: 1, name: 1 }, { unique: true }); // Prevent duplicate subscriptions per user
